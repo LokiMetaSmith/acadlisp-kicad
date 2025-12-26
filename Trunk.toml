@@ -1,0 +1,9 @@
+[build]
+# Use relative paths for deployment to any domain/subdirectory
+public_url = "./"
+# Disable top-level await for Safari compatibility
+no_module = false
+
+[watch]
+# Watch for changes in source files
+watch = ["src", "index.html"]

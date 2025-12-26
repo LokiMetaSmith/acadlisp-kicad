@@ -1,0 +1,29 @@
+[package]
+name = "acadlisp"
+version = "0.1.0"
+edition = "2021"
+description = "AutoLISP interpreter and mini CAD engine - CSV/TPL/LSP workflow emulator for AutoCAD 9/10 (DOS era)"
+repository = "https://github.com/acadlisp/acadlisp"
+homepage = "https://acadlisp.de"
+keywords = ["autolisp", "lisp", "cad", "dxf", "wasm"]
+categories = ["graphics", "mathematics", "wasm"]
+license = "MIT"
+
+[lib]
+name = "acadlisp"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "acadlisp-cli"
+path = "src/main.rs"
+
+[dependencies]
+wasm-bindgen = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["console"]
+
+[profile.release]
+opt-level = "s"
+lto = true

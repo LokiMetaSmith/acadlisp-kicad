@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLISP Interpreter in Rust/WASM - acadlisp.de</title>
+    <meta name="description" content="AutoLISP Interpreter in Rust und WebAssembly. Erleben Sie die Geschichte der CAD-Automatisierung von 1991.">
+    <link rel="canonical" href="https://acadlisp.de/">
+    <style>
+        body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        h1 { color: #0066cc; }
+        h2 { color: #333; margin-top: 30px; }
+        code { background: #f4f4f4; padding: 2px 6px; }
+        .note { background: #fffde7; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <article>
+        <h1>rust-autolisp: AutoLISP Interpreter in Rust/WebAssembly</h1>
+
+        <p class="note">
+            <strong>Hinweis:</strong> Die interaktive Demo benötigt JavaScript und WebAssembly.
+            <a href="https://acadlisp.de/">Zur interaktiven Version</a>
+        </p>
+
+        <h2>Was ist rust-autolisp?</h2>
+        <p>
+            <strong>rust-autolisp</strong> ist ein AutoLISP Interpreter, der in Rust geschrieben und zu WebAssembly kompiliert wurde.
+            Er ermöglicht das Ausführen von AutoLISP Code direkt im Browser - ohne Installation von AutoCAD.
+        </p>
+
+        <h2>Die Geschichte: Schaltplan Generator 1991</h2>
+        <p>
+            1991 stand ein kleiner Elektrobetrieb in Unterneukirchen, Bayern vor einer Herausforderung:
+            Jede Maschineninstallation erforderte individuelle Schaltpläne - ein zeitaufwändiger manueller Prozess.
+        </p>
+        <p>
+            Die Lösung: <strong>AutoLISP</strong>, die in AutoCAD eingebaute Programmiersprache.
+            Mit einem System aus CSV-Dateien, Templates und LISP-Code wurde die Schaltplanerstellung automatisiert.
+        </p>
+
+        <h2>LISP als frühe KI</h2>
+        <p>
+            LISP (List Processing) wurde 1958 von John McCarthy entwickelt und war jahrzehntelang
+            <em>die</em> Sprache der Künstlichen Intelligenz Forschung. Was macht LISP besonders?
+        </p>
+        <ul>
+            <li><strong>Homoikonizität:</strong> Code und Daten haben die gleiche Struktur (Listen)</li>
+            <li><strong>Selbstmodifikation:</strong> Programme können sich selbst schreiben und ändern</li>
+            <li><strong>Symbolische Verarbeitung:</strong> Manipulation von Symbolen statt nur Zahlen</li>
+        </ul>
+        <p>
+            Im Schaltplan-Generator von 1991 schrieb der Code tatsächlich sich selbst:
+            Das Einfügen eines Bauteils konnte weitere Bauteile auslösen, Templates generierten Templates.
+        </p>
+
+        <h2>Technische Details</h2>
+        <ul>
+            <li><strong>Sprache:</strong> Rust</li>
+            <li><strong>Zielplattform:</strong> WebAssembly (WASM)</li>
+            <li><strong>Ausgabeformate:</strong> SVG, DXF (AutoCAD R12/AC1009)</li>
+            <li><strong>Unterstützte AutoLISP Funktionen:</strong> defun, setq, if, while, cond, +, -, *, /, sin, cos, sqrt, car, cdr, list, nth, command, princ, und mehr</li>
+        </ul>
+
+        <h2>Beispiel Code</h2>
+        <pre><code>; Zeichne ein Rechteck
+(defun draw-box (x y w h)
+  (command "LINE" (list x y) (list (+ x w) y) "")
+  (command "LINE" (list (+ x w) y) (list (+ x w) (+ y h)) "")
+  (command "LINE" (list (+ x w) (+ y h)) (list x (+ y h)) "")
+  (command "LINE" (list x (+ y h)) (list x y) ""))
+
+(draw-box 10 10 100 50)
+</code></pre>
+
+        <h2>Links</h2>
+        <ul>
+            <li><a href="https://acadlisp.de/">Interaktive Demo (benötigt JavaScript)</a></li>
+            <li><a href="https://github.com/">Quellcode auf GitHub</a></li>
+        </ul>
+
+        <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+            <p>&copy; 2024 acadlisp.de - AutoLISP Interpreter in Rust/WebAssembly</p>
+        </footer>
+    </article>
+</body>
+</html>

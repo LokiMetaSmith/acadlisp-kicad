@@ -1,0 +1,24 @@
+TYP;BEZEICHNUNG;WERT;HERSTELLER;BESTELLNR;BEMERKUNG
+SCHUETZ;K1;24V DC;Siemens;3RT1015-1BB41;Hauptschuetz Motor 1
+SCHUETZ;K2;24V DC;Siemens;3RT1015-1BB41;Hauptschuetz Motor 2
+SCHUETZ;K3;230V AC;Siemens;3RT1016-1AP01;Sternschuetz
+SCHUETZ;K4;230V AC;Siemens;3RT1016-1AP01;Dreieckschuetz
+RELAIS;K5;24V DC;Siemens;3RH1122-1BB40;Hilfsrelais Verriegelung
+RELAIS;K6;24V DC;Siemens;3RH1122-1BB40;Zeitrelais Stern-Dreieck
+SCHALTER;S1;;Moeller;P1-25/EA/SVB;Hauptschalter
+SCHALTER;S2;;Moeller;M22-D-G;Taster EIN gruen
+SCHALTER;S3;;Moeller;M22-D-R;Taster AUS rot
+WECHSELSCHALTER;S4;;Busch-Jaeger;2000/6US;Flurschalter Eingang
+WECHSELSCHALTER;S5;;Busch-Jaeger;2000/6US;Flurschalter Treppe
+KREUZSCHALTER;S6;;Busch-Jaeger;2000/7US;Kreuzschalter Flur Mitte
+SICHERUNG;F1;16A gL;Siemens;5SG7611;Vorsicherung L1
+SICHERUNG;F2;16A gL;Siemens;5SG7611;Vorsicherung L2
+SICHERUNG;F3;16A gL;Siemens;5SG7611;Vorsicherung L3
+SICHERUNG;F4;6A gL;Siemens;5SG7133;Steuersicherung
+MOTOR;M1;5.5kW;Siemens;1LA7113-4AA;Foerderband Antrieb
+MOTOR;M2;3.0kW;Siemens;1LA7106-4AA;Luefter Kuehlung
+KLEMME;X1-1;;;Weidmueller;SAK 4;Klemmenleiste PE
+KLEMME;X1-2;;;Weidmueller;SAK 4;Klemmenleiste N
+KLEMME;X1-3;;;Weidmueller;SAK 4;Klemmenleiste L1
+KLEMME;X1-4;;;Weidmueller;SAK 4;Klemmenleiste L2
+KLEMME;X1-5;;;Weidmueller;SAK 4;Klemmenleiste L3

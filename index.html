@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLISP Interpreter in Rust/WASM - Schaltplan Generator 1991 | acadlisp.de</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="AutoLISP Interpreter in Rust und WebAssembly. Erleben Sie die Geschichte der CAD-Automatisierung: Wie 1991 mit AutoCAD und LISP Schaltpläne automatisch generiert wurden. Interaktive Demo im Browser.">
+    <meta name="keywords" content="AutoLISP, Rust, WebAssembly, WASM, AutoCAD, Schaltplan, CAD, LISP Interpreter, Elektrotechnik, DXF, 1991, DOS, Symbolic AI">
+    <meta name="author" content="acadlisp.de">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://acadlisp.de/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://acadlisp.de/">
+    <meta property="og:title" content="AutoLISP Interpreter in Rust/WASM - Schaltplan Generator">
+    <meta property="og:description" content="Erleben Sie die Geschichte der CAD-Automatisierung: Wie 1991 mit AutoCAD und LISP Schaltpläne automatisch generiert wurden. Interaktive Demo im Browser.">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:site_name" content="acadlisp.de">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://acadlisp.de/">
+    <meta name="twitter:title" content="AutoLISP Interpreter in Rust/WASM">
+    <meta name="twitter:description" content="AutoLISP läuft im Browser! Rust + WebAssembly Interpreter für AutoCAD LISP. Interaktive Demo.">
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "rust-autolisp",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web Browser",
+        "description": "AutoLISP Interpreter implemented in Rust, compiled to WebAssembly. Runs AutoCAD LISP code directly in the browser.",
+        "url": "https://acadlisp.de/",
+        "author": {
+            "@type": "Organization",
+            "name": "acadlisp.de"
+        },
+        "programmingLanguage": ["Rust", "LISP", "WebAssembly"],
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+        }
+    }
+    </script>
+
+    <!-- Additional Structured Data for the Story -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Schaltplan Generator 1991 - AutoLISP als frühe KI",
+        "description": "Die Geschichte wie 1991 ein Elektrobetrieb in Bayern mit AutoCAD und LISP die Schaltplanerstellung automatisierte - Code der sich selbst schreibt.",
+        "datePublished": "2024-12-26",
+        "author": {
+            "@type": "Organization",
+            "name": "acadlisp.de"
+        },
+        "about": [
+            {"@type": "Thing", "name": "AutoLISP"},
+            {"@type": "Thing", "name": "AutoCAD"},
+            {"@type": "Thing", "name": "Symbolic AI"},
+            {"@type": "Thing", "name": "Schaltplan"}
+        ]
+    }
+    </script>
+
+    <link data-trunk rel="rust" data-wasm-opt="z" data-target-name="acadlisp" data-initializer="initializer.js"/>
+
+    <!-- Noscript fallback for crawlers and non-JS browsers -->
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=https://acadlisp.de/noscript.html">
+        <style>
+            .slide { display: block !important; }
+            .nav { display: none; }
+        </style>
+    </noscript>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+        }
+
+        /* Slides */
+        .slide {
+            display: none;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .slide.active { display: flex; flex-direction: column; justify-content: center; }
+        .slide h1 { color: #00aaff; font-size: 48px; margin-bottom: 20px; }
+        .slide h2 { color: #00aaff; font-size: 32px; margin-bottom: 30px; }
+        .slide p { font-size: 24px; line-height: 1.6; margin-bottom: 20px; max-width: 900px; }
+        .slide .small { font-size: 16px; color: #666; }
+        .slide .highlight { color: #00aaff; }
+        .slide .big { font-size: 72px; color: #00aaff; }
+        .slide .center { text-align: center; align-items: center; }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        .nav button {
+            background: #222;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        .nav button:hover { background: #00ff88; color: #000; }
+        .nav .counter { color: #666; padding: 10px; }
+
+        /* Interactive Demo Slide */
+        .demo-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 100px);
+            padding: 20px;
+        }
+        .demo-left {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .demo-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+        .demo-header h1 { font-size: 18px; margin: 0; }
+        .demo-header .count {
+            background: #00aaff;
+            color: #000;
+            padding: 4px 12px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        textarea {
+            flex: 1;
+            background: #1a1a2e;
+            color: #00ff88;
+            border: 1px solid #333;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 10px;
+            resize: none;
+        }
+        button {
+            background: #222;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover { background: #00ff88; color: #000; }
+        button.primary { border-color: #00aaff; color: #00aaff; }
+        button.primary:hover { background: #00aaff; }
+        .log {
+            background: #0a0a0f;
+            border: 1px solid #333;
+            padding: 8px;
+            height: 100px;
+            font-size: 10px;
+            overflow-y: auto;
+        }
+
+        /* Gallery */
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            flex: 1;
+            background: #111;
+            align-content: flex-start;
+        }
+        .thumb {
+            width: 120px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            padding: 5px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .thumb:hover { border-color: #00aaff; }
+        .thumb.active { border-color: #00ff88; border-width: 2px; }
+        .thumb h4 { font-size: 10px; color: #00aaff; margin-bottom: 3px; }
+        .thumb .meta { font-size: 8px; color: #666; }
+        .thumb svg { width: 108px; height: 75px; background: #111; margin-top: 3px; }
+
+        /* Viewer */
+        .viewer {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #222;
+            border-bottom: 1px solid #333;
+        }
+        .viewer-header h3 { color: #00aaff; font-size: 14px; }
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: auto;
+        }
+        .viewer-content svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .stats { color: #666; font-size: 11px; padding: 10px; border-top: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <!-- SLIDE 1: Title -->
+    <div class="slide active center" id="slide1">
+        <h1>Schaltplan Generation</h1>
+        <p class="highlight">with AutoLISP</p>
+        <p>&nbsp;</p>
+        <p>Elektrotechnik Trahe GmbH</p>
+        <p class="small">Unterneukirchen, Bayern · 1991</p>
+        <p>&nbsp;</p>
+        <p class="small">How we automated CAD drawing</p>
+        <p class="small">and saved weeks of work</p>
+    </div>
+
+    <!-- SLIDE 2: The Challenge -->
+    <div class="slide" id="slide2">
+        <h2>The Challenge</h2>
+        <p>My brother's electrical company needed <span class="highlight">hundreds of Schaltpläne</span> (circuit diagrams).</p>
+        <p>Each drawing: Schütz, Motor, Sicherung, Motorschutzschalter, Klemmen...</p>
+        <p>Professional CAD work? <span class="highlight">Unbezahlbar.</span></p>
+        <p>&nbsp;</p>
+        <p>Drawing each by hand = <span class="highlight">5 hours per plan</span></p>
+        <p>100 drawings = 500 hours = <span class="highlight">12 weeks</span></p>
+    </div>
+
+    <!-- SLIDE 3: The Solution -->
+    <div class="slide" id="slide3">
+        <h2>The Solution</h2>
+        <p>AutoCAD Release 10 on a <span class="highlight">486 DX-50</span></p>
+        <p>Special boot disk (B:) for memory optimization</p>
+        <p class="small">HIMEM.SYS + EMM386.EXE → 605KB conventional RAM</p>
+        <p>&nbsp;</p>
+        <p>The secret weapon: <span class="highlight">AutoLISP</span></p>
+        <p>A programming language built into AutoCAD</p>
+    </div>
+
+    <!-- SLIDE 4: The Workflow -->
+    <div class="slide" id="slide4">
+        <h2>The Workflow</h2>
+        <p>1. Export component list from dBase III → <span class="highlight">CSV file</span></p>
+        <p>2. CSV format: START;TEMPLATE;NAME + component lines + STOP</p>
+        <p>3. AutoLISP reads CSV, loads <span class="highlight">TPL</span> (template)</p>
+        <p>4. Template draws the Schaltplan, inserts symbols</p>
+        <p>5. Save as DWG, send to <span class="highlight">Druckwarteschlange</span></p>
+        <p>&nbsp;</p>
+        <p class="small">Print queue written in Turbo Pascal</p>
+        <p class="small">HP LaserJet III kept printing while AutoCAD kept drawing</p>
+    </div>
+
+    <!-- SLIDE 5: The Result -->
+    <div class="slide center" id="slide5">
+        <h2>The Result</h2>
+        <p class="big">99.5%</p>
+        <p class="highlight">time saved</p>
+        <p>&nbsp;</p>
+        <p>100 drawings: 12 weeks → <span class="highlight">&lt;1 hour</span></p>
+        <p class="small">(prepare CSV, run script, go for Kaffee)</p>
+    </div>
+
+    <!-- SLIDE 6: LISP = AI -->
+    <div class="slide" id="slide6">
+        <h2>LISP: The Language of AI</h2>
+        <p>In 1991, <span class="highlight">LISP</span> was synonymous with <span class="highlight">Artificial Intelligence</span></p>
+        <p>&nbsp;</p>
+        <p>MIT AI Lab, Symbolics LISP Machines, Expert Systems...</p>
+        <p>The language that could <span class="highlight">manipulate its own code</span></p>
+        <p>&nbsp;</p>
+        <p class="small">And here I was, using it to draw Schaltpläne</p>
+    </div>
+
+    <!-- SLIDE 7: The Code - defun -->
+    <div class="slide" id="slide7">
+        <h2>The Code: Self-Defining Functions</h2>
+        <pre style="background:#1a1a2e; padding:20px; font-size:18px; color:#00ff88; max-width:800px;">
+<span style="color:#666">; Define a function that draws a Schütz (contactor)</span>
+(<span style="color:#00aaff">defun</span> DRAW-SCHUETZ (pos name)
+  (<span style="color:#00aaff">command</span> "CIRCLE" pos 5)
+  (<span style="color:#00aaff">command</span> "TEXT"
+    (<span style="color:#00aaff">list</span> (+ (car pos) 10) (cadr pos))
+    3 0 name)
+  (<span style="color:#00aaff">princ</span> (strcat "\nSchütz " name " inserted"))
+)
+
+<span style="color:#666">; Call it</span>
+(DRAW-SCHUETZ '(50 150) "K1")
+        </pre>
+        <p class="small">Functions that create drawing entities</p>
+    </div>
+
+    <!-- SLIDE 8: The Code - recursion -->
+    <div class="slide" id="slide8">
+        <h2>The Code: Recursion</h2>
+        <pre style="background:#1a1a2e; padding:20px; font-size:18px; color:#00ff88; max-width:800px;">
+<span style="color:#666">; Process each component recursively</span>
+(<span style="color:#00aaff">defun</span> PROCESS-COMPONENTS (lst y)
+  (<span style="color:#00aaff">if</span> (null lst)
+    (<span style="color:#00aaff">princ</span> "\nDone!")
+    (<span style="color:#00aaff">progn</span>
+      (DRAW-COMPONENT (<span style="color:#00aaff">car</span> lst) y)
+      (PROCESS-COMPONENTS
+        (<span style="color:#00aaff">cdr</span> lst)
+        (- y 25))  <span style="color:#666">; next position</span>
+    )
+  )
+)
+        </pre>
+        <p class="small">The function calls itself - classic LISP recursion</p>
+    </div>
+
+    <!-- SLIDE 9: Self-Modifying Code -->
+    <div class="slide" id="slide9">
+        <h2>Code That Writes Itself</h2>
+        <pre style="background:#1a1a2e; padding:20px; font-size:16px; color:#00ff88; max-width:900px;">
+<span style="color:#666">; Inserting a Schütz TRIGGERS other Bauteile</span>
+(<span style="color:#00aaff">defun</span> INSERT-SCHUETZ (name pos)
+  (DRAW-SCHUETZ-SYMBOL pos)
+  <span style="color:#666">; The Schütz needs a coil in control circuit!</span>
+  (<span style="color:#00aaff">setq</span> *CONTROL-CIRCUIT*
+    (<span style="color:#00aaff">append</span> *CONTROL-CIRCUIT*
+      (<span style="color:#00aaff">list</span> (list 'COIL name *NEXT-CTRL-Y*))))
+  <span style="color:#666">; It also needs auxiliary contacts</span>
+  (<span style="color:#00aaff">if</span> (= *SCHUETZ-COUNT* 1)
+    (<span style="color:#00aaff">setq</span> *CONTROL-CIRCUIT*
+      (<span style="color:#00aaff">append</span> *CONTROL-CIRCUIT*
+        '((SELF-HOLD K1)))))  <span style="color:#666">; add self-holding contact</span>
+)
+        </pre>
+        <p class="small">Inserting K1 automatically generates coil + self-holding contact</p>
+    </div>
+
+    <!-- SLIDE 10: Symbols Change Shape -->
+    <div class="slide" id="slide10">
+        <h2>Symbols Change Shape</h2>
+        <pre style="background:#1a1a2e; padding:20px; font-size:16px; color:#00ff88; max-width:900px;">
+<span style="color:#666">; Motorschutz symbol SIZE depends on Ampere value</span>
+(<span style="color:#00aaff">defun</span> DRAW-MOTORSCHUTZ (pos ampere)
+  (<span style="color:#00aaff">setq</span> size (<span style="color:#00aaff">cond</span>
+    ((&lt; ampere 10) 8)    <span style="color:#666">; small</span>
+    ((&lt; ampere 25) 12)   <span style="color:#666">; medium</span>
+    (t 16)))             <span style="color:#666">; large</span>
+  (DRAW-THERMAL-ELEMENT pos size)
+  <span style="color:#666">; Large motors need additional thermal protection</span>
+  (<span style="color:#00aaff">if</span> (> ampere 20)
+    (<span style="color:#00aaff">progn</span>
+      (INSERT-PTC-SENSOR)        <span style="color:#666">; auto-add PTC</span>
+      (ADD-TO-CONTROL 'TEMP-RELAY)))
+)
+        </pre>
+        <p class="small">The symbol adapts - and triggers more components</p>
+    </div>
+
+    <!-- SLIDE 11: Template Generates Template -->
+    <div class="slide" id="slide11">
+        <h2>Template Generates Template</h2>
+        <pre style="background:#1a1a2e; padding:20px; font-size:16px; color:#00ff88; max-width:900px;">
+<span style="color:#666">; STERN-DREIECK template BUILDS its own control circuit</span>
+(<span style="color:#00aaff">defun</span> STERN-DR-CONTROL ()
+  (<span style="color:#00aaff">setq</span> ctrl-code '())
+  <span style="color:#666">; Add timer relay - it will control K2/K3 switching</span>
+  (<span style="color:#00aaff">setq</span> ctrl-code (<span style="color:#00aaff">append</span> ctrl-code
+    '((TIMER K4 *UMSCHALT-ZEIT*))))
+  <span style="color:#666">; K2 (Stern) and K3 (Dreieck) are interlocked!</span>
+  (<span style="color:#00aaff">setq</span> ctrl-code (<span style="color:#00aaff">append</span> ctrl-code
+    '((INTERLOCK K2 K3))))  <span style="color:#666">; generate interlock logic</span>
+  <span style="color:#666">; NOW EXECUTE the generated code</span>
+  (<span style="color:#00aaff">foreach</span> cmd ctrl-code (<span style="color:#00aaff">eval</span> cmd))
+)
+        </pre>
+        <p class="small">The template BUILDS code, then EXECUTES it - <span class="highlight">code writes code</span></p>
+    </div>
+
+    <!-- SLIDE 12: The Intelligence -->
+    <div class="slide" id="slide12">
+        <h2>Symbolic AI in Action</h2>
+        <p>This was <span class="highlight">Artificial Intelligence</span> in 1991:</p>
+        <p>&nbsp;</p>
+        <p>• Insert Schütz → <span class="highlight">auto-generate</span> coil + contacts</p>
+        <p>• Read Ampere value → <span class="highlight">adapt symbol size</span></p>
+        <p>• Detect Stern-Dreieck → <span class="highlight">build interlock logic</span></p>
+        <p>• Template → <span class="highlight">generates more template</span></p>
+        <p>&nbsp;</p>
+        <p>The code <span class="highlight">understood</span> the domain.</p>
+        <p>It <span class="highlight">made decisions</span>. It <span class="highlight">wrote itself</span>.</p>
+        <p>&nbsp;</p>
+        <p class="small">Not neural networks. Rules, recursion, self-modification.</p>
+    </div>
+
+    <!-- SLIDE 13: Today -->
+    <div class="slide" id="slide13">
+        <h2>Today: rust-autolisp</h2>
+        <p>33 years later, I rebuilt the engine in <span class="highlight">Rust</span></p>
+        <p>Compiled to <span class="highlight">WebAssembly</span></p>
+        <p>&nbsp;</p>
+        <p>Same workflow: CSV → TPL → Drawing</p>
+        <p>Same LISP: <span class="highlight">defun, setq, car, cdr, recursion</span></p>
+        <p>Same speed: <span class="highlight">&lt;1 second</span> for 50+ drawings</p>
+        <p>&nbsp;</p>
+        <p class="small">Next slide: Try it yourself →</p>
+    </div>
+
+    <!-- SLIDE 14: Interactive Demo -->
+    <div class="slide" id="slide14" style="padding: 0;">
+        <div class="demo-header">
+            <div>
+                <h1>rust-autolisp <span class="count" id="count">0</span></h1>
+                <span class="small">CSV → TPL → DXF | Rust/WASM Engine</span>
+            </div>
+            <div>
+                <button id="process" class="primary">▶ Verarbeiten</button>
+                <button id="exportAll">⬇ Export All DXF</button>
+            </div>
+        </div>
+        <div class="demo-container">
+            <div class="demo-left">
+                <textarea id="csv"></textarea>
+                <div class="log" id="log">Loading WASM engine...</div>
+            </div>
+            <div class="demo-right">
+                <div class="gallery" id="gallery"></div>
+                <div class="viewer">
+                    <div class="viewer-header">
+                        <h3 id="viewerTitle">Select a drawing</h3>
+                        <button id="exportSvg">⬇ SVG</button>
+                        <button id="exportDxf">⬇ DXF</button>
+                    </div>
+                    <div class="viewer-content" id="viewerContent">
+                        <p class="small">Click "Verarbeiten" to generate drawings from CSV</p>
+                    </div>
+                    <div class="stats" id="stats"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 15: Interactive Playground -->
+    <div class="slide" id="slide15" style="padding: 10px;">
+        <div style="display:flex; gap:15px; height:calc(100vh - 40px);">
+            <!-- Left: LISP Editor -->
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <h2 style="color:#00aaff; font-size:14px; margin-bottom:10px;">AutoLISP Playground</h2>
+                <div style="margin-bottom:10px;">
+                    <button id="runLisp" class="primary">▶ Run</button>
+                    <button id="clearLisp">Clear</button>
+                    <select id="examples" style="background:#222; color:#00ff88; border:1px solid #333; padding:5px;">
+                        <option value="">-- Load Example --</option>
+                        <option value="hello">Hello World</option>
+                        <option value="math">Math & Recursion</option>
+                        <option value="box">Draw a Box</option>
+                        <option value="spiral">Spiral</option>
+                        <option value="schaltplan">Mini Schaltplan</option>
+                        <option value="fractal">Recursive Tree</option>
+                    </select>
+                </div>
+                <textarea id="lispCode" style="flex:1; background:#1a1a2e; color:#00ff88; border:1px solid #333; padding:10px; font-family:monospace; font-size:12px;">; Try some AutoLISP!
+;
+; Basic math
+(+ 1 2 3)
+(* 6 7)
+
+; Define a function
+(defun square (x) (* x x))
+(square 12)
+
+; Draw something
+(command "LINE" '(0 0) '(100 100) "")
+(command "CIRCLE" '(50 50) 30)
+(command "TEXT" '(10 80) 5 0 "Hello LISP!")
+
+(princ "\nDone!")</textarea>
+                <div id="lispOutput" style="background:#0a0a0f; border:1px solid #333; padding:10px; height:100px; font-size:11px; overflow-y:auto; margin-top:10px;"></div>
+            </div>
+            <!-- Middle: Drawing Output -->
+            <div style="flex:1.5; display:flex; flex-direction:column;">
+                <h2 style="color:#00aaff; font-size:14px; margin-bottom:10px;">Drawing Output</h2>
+                <div id="lispDrawing" style="flex:1; background:#1a1a2e; border:1px solid #333; display:flex; align-items:center; justify-content:center; overflow:auto;"></div>
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button id="exportPlaySvg">⬇ SVG</button>
+                    <button id="exportPlayDxf">⬇ DXF</button>
+                    <span id="playStats" style="color:#666; font-size:11px; padding:8px;"></span>
+                </div>
+            </div>
+            <!-- Right: Help -->
+            <div style="width:280px; background:#111; border:1px solid #333; padding:15px; overflow-y:auto;">
+                <h2 style="color:#00aaff; font-size:14px; margin-bottom:15px;">Quick Reference</h2>
+                <div style="font-size:11px; line-height:1.8;">
+                    <p style="color:#00aaff;">Drawing Commands:</p>
+                    <code style="color:#666;">(command "LINE" '(x1 y1) '(x2 y2) "")</code><br>
+                    <code style="color:#666;">(command "CIRCLE" '(cx cy) radius)</code><br>
+                    <code style="color:#666;">(command "TEXT" '(x y) height rot "text")</code><br>
+                    <br>
+                    <p style="color:#00aaff;">Math:</p>
+                    <code style="color:#666;">(+ - * / 1+ 1-)</code><br>
+                    <code style="color:#666;">(sin cos sqrt abs)</code><br>
+                    <br>
+                    <p style="color:#00aaff;">Lists:</p>
+                    <code style="color:#666;">(car lst) → first</code><br>
+                    <code style="color:#666;">(cdr lst) → rest</code><br>
+                    <code style="color:#666;">(list a b c)</code><br>
+                    <code style="color:#666;">(nth n lst)</code><br>
+                    <br>
+                    <p style="color:#00aaff;">Control:</p>
+                    <code style="color:#666;">(if cond then else)</code><br>
+                    <code style="color:#666;">(cond (c1 r1) (c2 r2))</code><br>
+                    <code style="color:#666;">(while cond body)</code><br>
+                    <code style="color:#666;">(foreach x lst body)</code><br>
+                    <br>
+                    <p style="color:#00aaff;">Functions:</p>
+                    <code style="color:#666;">(defun name (args) body)</code><br>
+                    <code style="color:#666;">(setq var value)</code><br>
+                    <code style="color:#666;">(princ "text")</code><br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 16: Function Plotter for Math Students -->
+    <div class="slide" id="slide16" style="padding: 10px;">
+        <div style="display:flex; gap:15px; height:calc(100vh - 40px);">
+            <!-- Left: Function Editor -->
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <h2 style="color:#ff8800; font-size:16px; margin-bottom:10px;">📐 LISP Function Plotter</h2>
+                <p style="color:#888; font-size:11px; margin-bottom:10px;">Define f(x) in LISP, plot it visually. Learn functional programming!</p>
+                <div style="margin-bottom:10px;">
+                    <button id="plotFunction" class="primary" style="background:#ff8800; border-color:#ff8800;">📈 Plot</button>
+                    <button id="clearPlot">Clear</button>
+                    <select id="plotExamples" style="background:#222; color:#00ff88; border:1px solid #333; padding:5px;">
+                        <option value="">-- Load Function --</option>
+                        <optgroup label="Analysis (Calculus)">
+                            <option value="integral">∫ Integral (Simpson)</option>
+                            <option value="derivative">d/dx Derivative</option>
+                            <option value="derivative2">d²/dx² Second Deriv</option>
+                        </optgroup>
+                        <optgroup label="Fourier / Transforms">
+                            <option value="fourier">Fourier: Square Wave</option>
+                            <option value="fourier-saw">Fourier: Sawtooth</option>
+                            <option value="convolution">Convolution</option>
+                            <option value="laplace">Laplace Transform</option>
+                        </optgroup>
+                        <optgroup label="Recursion Classics">
+                            <option value="taylor">Taylor Series sin(x)</option>
+                            <option value="fibonacci">Fibonacci</option>
+                            <option value="mandelbrot">Mandelbrot Fractal</option>
+                            <option value="newton">Newton's Method</option>
+                        </optgroup>
+                        <optgroup label="Basic Functions">
+                            <option value="sin">sin(x)</option>
+                            <option value="cos">cos(x)</option>
+                            <option value="parabola">x² (Parabola)</option>
+                            <option value="harmonic">Harmonic Series</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <textarea id="plotCode" style="flex:1; background:#1a1a2e; color:#00ff88; border:1px solid #333; padding:10px; font-family:monospace; font-size:12px;">; Define your function f(x)
+; The plotter will evaluate f(x) for x from -10 to 10
+
+(defun f (x)
+  (sin x))
+
+; That's it! Click "Plot" to visualize.
+;
+; Try modifying:
+;   (* 2 (sin x))        ; amplitude
+;   (sin (* 2 x))        ; frequency
+;   (+ (sin x) (cos x))  ; combine functions
+;   (* x (sin x))        ; modulation</textarea>
+                <div id="plotOutput" style="background:#0a0a0f; border:1px solid #333; padding:10px; height:80px; font-size:11px; overflow-y:auto; margin-top:10px;"></div>
+            </div>
+            <!-- Middle: Plot Area -->
+            <div style="flex:1.8; display:flex; flex-direction:column;">
+                <h2 style="color:#ff8800; font-size:14px; margin-bottom:10px;">Graph Output</h2>
+                <div id="plotArea" style="flex:1; background:#1a1a2e; border:1px solid #333; display:flex; align-items:center; justify-content:center; overflow:hidden;"></div>
+                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                    <span style="color:#666; font-size:11px;">X:</span>
+                    <input type="number" id="xMin" value="-10" style="width:50px; background:#222; color:#00ff88; border:1px solid #333; padding:3px;">
+                    <span style="color:#666; font-size:11px;">to</span>
+                    <input type="number" id="xMax" value="10" style="width:50px; background:#222; color:#00ff88; border:1px solid #333; padding:3px;">
+                    <span style="color:#666; font-size:11px; margin-left:10px;">Y:</span>
+                    <input type="number" id="yMin" value="-5" style="width:50px; background:#222; color:#00ff88; border:1px solid #333; padding:3px;">
+                    <span style="color:#666; font-size:11px;">to</span>
+                    <input type="number" id="yMax" value="5" style="width:50px; background:#222; color:#00ff88; border:1px solid #333; padding:3px;">
+                    <span id="plotStats" style="color:#666; font-size:11px; margin-left:auto;"></span>
+                </div>
+            </div>
+            <!-- Right: Math Reference -->
+            <div style="width:280px; background:#111; border:1px solid #333; padding:15px; overflow-y:auto;">
+                <h2 style="color:#ff8800; font-size:14px; margin-bottom:12px;">Analysis in LISP</h2>
+                <div style="font-size:10px; line-height:1.7;">
+                    <p style="color:#ff8800;">∫ Integration:</p>
+                    <span style="color:#666;">Simpson's rule via recursion</span><br>
+                    <code style="color:#00ff88; font-size:9px;">(integrate f a b n)</code><br>
+                    <br>
+                    <p style="color:#ff8800;">d/dx Differentiation:</p>
+                    <span style="color:#666;">Limit definition, any order</span><br>
+                    <code style="color:#00ff88; font-size:9px;">(derivative f x)</code><br>
+                    <br>
+                    <p style="color:#ff8800;">Fourier Series:</p>
+                    <span style="color:#666;">Build any wave from sines!</span><br>
+                    <span style="color:#00aaff;">Square:</span> sin(x) + sin(3x)/3 + ...<br>
+                    <span style="color:#00aaff;">Sawtooth:</span> alternating signs<br>
+                    <br>
+                    <p style="color:#ff8800;">Higher Functions:</p>
+                    <span style="color:#666;">Pass functions as arguments!</span><br>
+                    <code style="color:#00ff88; font-size:9px;">(defun deriv (func x) ...)</code><br>
+                    <code style="color:#00ff88; font-size:9px;">(deriv sin 0) → 1</code><br>
+                    <br>
+                    <p style="color:#ff8800;">Key Examples:</p>
+                    <span style="color:#00aaff;">∫sin</span> → 1-cos(x)<br>
+                    <span style="color:#00aaff;">d/dx sin</span> → cos(x)<br>
+                    <span style="color:#00aaff;">Fourier</span> → build square wave<br>
+                    <span style="color:#00aaff;">Mandelbrot</span> → fractal math<br>
+                    <br>
+                    <p style="color:#888; font-size:9px; border-top:1px solid #333; padding-top:8px;">
+                        💡 LISP = Lambda Calculus realized.<br>
+                        Functions are first-class citizens.<br>
+                        Perfect for mathematical analysis!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button id="startSlideshow" style="background:#ff8800; color:#000; border-color:#ff8800; font-weight:bold;">▶ Slideshow</button>
+        <button id="skipToDemo" style="background:#00ff88; color:#000; border-color:#00ff88; font-weight:bold;">⚡ Generate DWGs</button>
+        <button id="skipToPlayground" style="background:#00aaff; color:#000; border-color:#00aaff;">▶ Playground</button>
+        <button id="skipToPlotter" style="background:#ff8800; color:#000; border-color:#ff8800;">📐 Plotter</button>
+        <span class="counter" id="slideCounter">1 / 16</span>
+        <button id="prevSlide">← Prev</button>
+        <button id="nextSlide">Next →</button>
+    </div>
+
+    <script type="module">
+        // Slide navigation
+        let currentSlide = 1;
+        const totalSlides = 16;
+        let slideshowInterval = null;
+        let slideshowRunning = false;
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById(`slide${n}`).classList.add('active');
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+            currentSlide = n;
+        }
+
+        function startSlideshow() {
+            if (slideshowRunning) {
+                // Stop slideshow
+                clearInterval(slideshowInterval);
+                slideshowRunning = false;
+                document.getElementById('startSlideshow').textContent = '▶ Slideshow';
+                document.getElementById('startSlideshow').style.background = '#ff8800';
+            } else {
+                // Start slideshow from slide 1
+                showSlide(1);
+                slideshowRunning = true;
+                document.getElementById('startSlideshow').textContent = '⏹ Stop';
+                document.getElementById('startSlideshow').style.background = '#ff4444';
+                slideshowInterval = setInterval(() => {
+                    if (currentSlide < 13) {
+                        // Auto-advance through story slides (1-13)
+                        showSlide(currentSlide + 1);
+                    } else {
+                        // Stop at slide 13 (before interactive demos)
+                        clearInterval(slideshowInterval);
+                        slideshowRunning = false;
+                        document.getElementById('startSlideshow').textContent = '▶ Slideshow';
+                        document.getElementById('startSlideshow').style.background = '#ff8800';
+                    }
+                }, 10000); // 10 seconds per slide
+            }
+        }
+
+        document.getElementById('startSlideshow').onclick = startSlideshow;
+        document.getElementById('prevSlide').onclick = () => showSlide(Math.max(1, currentSlide - 1));
+        document.getElementById('nextSlide').onclick = () => showSlide(Math.min(totalSlides, currentSlide + 1));
+        document.getElementById('skipToDemo').onclick = () => showSlide(14);
+        document.getElementById('skipToPlayground').onclick = () => showSlide(15);
+        document.getElementById('skipToPlotter').onclick = () => showSlide(16);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') showSlide(Math.min(totalSlides, currentSlide + 1));
+            if (e.key === 'ArrowLeft') showSlide(Math.max(1, currentSlide - 1));
+        });
+
+        // Generate large CSV with 50+ drawings
+        function generateCSV() {
+            const templates = ['MOTOR_ST', 'STERN_DR', 'WENDE', 'DIREKT'];
+            const schuetze = ['LC1-D09', 'LC1-D12', 'LC1-D18', 'LC1-D25', 'LC1-D32', 'LC1-D40'];
+            const motorsch = ['GV2-M06', 'GV2-M08', 'GV2-M10', 'GV2-M14', 'GV2-M16', 'GV2-M20', 'GV2-M22'];
+            const sicherungen = ['6A', '10A', '16A', '20A', '25A', '32A'];
+
+            let csv = `# Elektrotechnik Trahe GmbH
+# Projekt: Industrieanlage Müller & Söhne
+# Exportiert: 15.03.1991 aus dBase III
+# 50 Schaltpläne
+
+`;
+            for (let i = 1; i <= 50; i++) {
+                const num = i.toString().padStart(2, '0');
+                const tpl = templates[i % 4];
+                const sch = schuetze[i % schuetze.length];
+                const mot = motorsch[i % motorsch.length];
+                const sich = sicherungen[i % sicherungen.length];
+
+                csv += `START;${tpl};${num}-K1\n`;
+
+                if (tpl === 'MOTOR_ST') {
+                    csv += `K1;Schuetz;${sch};Telemecanique\n`;
+                    csv += `Q1;Motorschutzschalter;${mot}\n`;
+                    csv += `F1;Sicherung;${sich};gL\n`;
+                } else if (tpl === 'STERN_DR') {
+                    csv += `K1;Hauptschuetz;${sch};Telemecanique\n`;
+                    csv += `K2;Sternschuetz;LC1-D18;Telemecanique\n`;
+                    csv += `K3;Dreieckschuetz;LC1-D18;Telemecanique\n`;
+                    csv += `K4;Zeitrelais;RE7-RM11;3s\n`;
+                    csv += `Q1;Motorschutzschalter;${mot}\n`;
+                } else if (tpl === 'WENDE') {
+                    csv += `K1;Schuetz-Rechts;${sch};Telemecanique\n`;
+                    csv += `K2;Schuetz-Links;${sch};Telemecanique\n`;
+                    csv += `Q1;Motorschutzschalter;${mot}\n`;
+                    csv += `F1;Sicherung;${sich};gL\n`;
+                } else if (tpl === 'DIREKT') {
+                    csv += `S1;Taster;XB2-BA21;gruen;EIN\n`;
+                    csv += `S2;Taster;XB2-BA42;rot;AUS\n`;
+                    csv += `H1;Meldeleuchte;XB2-BV63;gruen\n`;
+                    csv += `H2;Meldeleuchte;XB2-BV64;rot\n`;
+                }
+                csv += `STOP\n\n`;
+            }
+            return csv;
+        }
+
+        // Main app
+        window.addEventListener('TrunkApplicationStarted', () => {
+            console.log('TrunkApplicationStarted event received');
+
+            if (!window.wasmBindings) {
+                console.error('wasmBindings not available');
+                alert('WASM failed to load. Please refresh or try a different browser.');
+                return;
+            }
+
+            const { WasmEngine } = window.wasmBindings;
+            if (!WasmEngine) {
+                console.error('WasmEngine not found in bindings');
+                return;
+            }
+
+            let engine;
+            try {
+                engine = new WasmEngine();
+                console.log('WasmEngine created successfully');
+            } catch (e) {
+                console.error('Failed to create WasmEngine:', e);
+                alert('Failed to initialize WASM engine: ' + e.message);
+                return;
+            }
+
+            const log = document.getElementById('log');
+            let drawings = [];
+            let currentDrawing = null;
+
+            document.getElementById('csv').value = generateCSV();
+            log.textContent = 'Engine bereit. 50 Zeichnungen im CSV.';
+
+            function appendLog(msg) {
+                log.textContent += '\n' + msg;
+                log.scrollTop = log.scrollHeight;
+            }
+
+            function parseCSV(csv) {
+                const result = [];
+                let current = null;
+                for (const line of csv.split('\n')) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith('#')) continue;
+                    const fields = trimmed.split(';');
+                    const cmd = fields[0].toUpperCase();
+                    if (cmd === 'START') {
+                        if (current) result.push(current);
+                        current = { template: fields[1] || 'DEFAULT', name: fields[2] || 'UNNAMED', components: [] };
+                    } else if (cmd === 'STOP' || cmd === 'END') {
+                        if (current) result.push(current);
+                        current = null;
+                    } else if (current) {
+                        current.components.push({ name: fields[0], type: fields[1] || '', value: fields[2] || '', extra: fields.slice(3).join(';') });
+                    }
+                }
+                if (current) result.push(current);
+                return result;
+            }
+
+            function generateDrawing(spec) {
+                engine.clear();
+
+                // Frame
+                engine.eval(`(command "LINE" '(0 0) '(297 0) "")`);
+                engine.eval(`(command "LINE" '(297 0) '(297 210) "")`);
+                engine.eval(`(command "LINE" '(297 210) '(0 210) "")`);
+                engine.eval(`(command "LINE" '(0 210) '(0 0) "")`);
+
+                if (spec.template === 'MOTOR_ST' || spec.template === 'STERN_DR' || spec.template === 'WENDE') {
+                    // Power circuit
+                    engine.eval(`(command "LINE" '(40 200) '(40 70) "")`);
+                    engine.eval(`(command "LINE" '(80 200) '(80 70) "")`);
+                    engine.eval(`(command "LINE" '(120 200) '(120 70) "")`);
+                    engine.eval(`(command "TEXT" '(38 203) 3 0 "L1")`);
+                    engine.eval(`(command "TEXT" '(78 203) 3 0 "L2")`);
+                    engine.eval(`(command "TEXT" '(118 203) 3 0 "L3")`);
+
+                    // Fuses
+                    engine.eval(`(command "LINE" '(36 190) '(44 190) "")`);
+                    engine.eval(`(command "LINE" '(36 188) '(44 192) "")`);
+                    engine.eval(`(command "LINE" '(76 190) '(84 190) "")`);
+                    engine.eval(`(command "LINE" '(76 188) '(84 192) "")`);
+                    engine.eval(`(command "LINE" '(116 190) '(124 190) "")`);
+                    engine.eval(`(command "LINE" '(116 188) '(124 192) "")`);
+
+                    let y = 165;
+                    for (const comp of spec.components) {
+                        if (comp.type.includes('Schuetz') || comp.type.includes('schuetz')) {
+                            engine.eval(`(command "LINE" '(36 ${y-3}) '(44 ${y+3}) "")`);
+                            engine.eval(`(command "LINE" '(76 ${y-3}) '(84 ${y+3}) "")`);
+                            engine.eval(`(command "LINE" '(116 ${y-3}) '(124 ${y+3}) "")`);
+                            engine.eval(`(command "LINE" '(44 ${y}) '(76 ${y}) "")`);
+                            engine.eval(`(command "LINE" '(84 ${y}) '(116 ${y}) "")`);
+                            engine.eval(`(command "TEXT" '(130 ${y}) 3 0 "${comp.name}")`);
+                            y -= 22;
+                        } else if (comp.type.includes('Motorschutz')) {
+                            engine.eval(`(command "LINE" '(37 ${y}) '(43 ${y-4}) "")`);
+                            engine.eval(`(command "LINE" '(43 ${y-4}) '(37 ${y-8}) "")`);
+                            engine.eval(`(command "LINE" '(77 ${y}) '(83 ${y-4}) "")`);
+                            engine.eval(`(command "LINE" '(83 ${y-4}) '(77 ${y-8}) "")`);
+                            engine.eval(`(command "LINE" '(117 ${y}) '(123 ${y-4}) "")`);
+                            engine.eval(`(command "LINE" '(123 ${y-4}) '(117 ${y-8}) "")`);
+                            engine.eval(`(command "LINE" '(35 ${y+2}) '(125 ${y+2}) "")`);
+                            engine.eval(`(command "LINE" '(35 ${y-10}) '(125 ${y-10}) "")`);
+                            engine.eval(`(command "TEXT" '(130 ${y}) 3 0 "${comp.name}")`);
+                            y -= 22;
+                        } else if (comp.type.includes('Zeitrelais')) {
+                            engine.eval(`(command "CIRCLE" '(80 ${y}) 6)`);
+                            engine.eval(`(command "TEXT" '(77 ${y-2}) 3 0 "t")`);
+                            engine.eval(`(command "TEXT" '(130 ${y}) 3 0 "${comp.name}")`);
+                            y -= 18;
+                        }
+                    }
+
+                    // Motor
+                    engine.eval(`(command "LINE" '(40 80) '(60 65) "")`);
+                    engine.eval(`(command "LINE" '(80 80) '(80 65) "")`);
+                    engine.eval(`(command "LINE" '(120 80) '(100 65) "")`);
+                    engine.eval(`(command "CIRCLE" '(80 50) 12)`);
+                    engine.eval(`(command "TEXT" '(76 47) 6 0 "M")`);
+                    engine.eval(`(command "LINE" '(80 38) '(80 30) "")`);
+                    engine.eval(`(command "LINE" '(75 30) '(85 30) "")`);
+
+                    // Control circuit
+                    engine.eval(`(command "LINE" '(160 200) '(160 70) "")`);
+                    engine.eval(`(command "LINE" '(240 200) '(240 70) "")`);
+                    engine.eval(`(command "LINE" '(160 180) '(175 180) "")`);
+                    engine.eval(`(command "LINE" '(175 182) '(185 178) "")`);
+                    engine.eval(`(command "LINE" '(185 180) '(200 180) "")`);
+                    engine.eval(`(command "LINE" '(200 175) '(210 180) "")`);
+                    engine.eval(`(command "LINE" '(210 180) '(220 180) "")`);
+                    engine.eval(`(command "LINE" '(220 180) '(220 130) "")`);
+                    engine.eval(`(command "LINE" '(215 130) '(225 130) "")`);
+                    engine.eval(`(command "LINE" '(215 130) '(215 115) "")`);
+                    engine.eval(`(command "LINE" '(225 130) '(225 115) "")`);
+                    engine.eval(`(command "LINE" '(215 115) '(225 115) "")`);
+                    engine.eval(`(command "TEXT" '(217 120) 3 0 "K1")`);
+                    engine.eval(`(command "LINE" '(220 115) '(220 100) "")`);
+                    engine.eval(`(command "LINE" '(220 100) '(240 100) "")`);
+                    engine.eval(`(command "TEXT" '(178 185) 2 0 "S0")`);
+                    engine.eval(`(command "TEXT" '(203 185) 2 0 "S1")`);
+
+                } else if (spec.template === 'DIREKT') {
+                    engine.eval(`(command "LINE" '(40 200) '(40 70) "")`);
+                    engine.eval(`(command "LINE" '(200 200) '(200 70) "")`);
+                    engine.eval(`(command "TEXT" '(35 203) 3 0 "+24V")`);
+                    engine.eval(`(command "TEXT" '(195 203) 3 0 "0V")`);
+
+                    let y = 180;
+                    for (const comp of spec.components) {
+                        if (comp.type.includes('Taster')) {
+                            engine.eval(`(command "LINE" '(40 ${y}) '(80 ${y}) "")`);
+                            engine.eval(`(command "LINE" '(80 ${y-5}) '(100 ${y}) "")`);
+                            engine.eval(`(command "LINE" '(100 ${y}) '(140 ${y}) "")`);
+                            engine.eval(`(command "TEXT" '(85 ${y+6}) 3 0 "${comp.name}")`);
+                            y -= 25;
+                        } else if (comp.type.includes('Meldeleuchte')) {
+                            engine.eval(`(command "LINE" '(40 ${y}) '(100 ${y}) "")`);
+                            engine.eval(`(command "CIRCLE" '(120 ${y}) 8)`);
+                            engine.eval(`(command "LINE" '(128 ${y}) '(200 ${y}) "")`);
+                            engine.eval(`(command "TEXT" '(130 ${y+6}) 3 0 "${comp.name}")`);
+                            y -= 25;
+                        }
+                    }
+                }
+
+                // Wire numbers
+                for (let i = 1; i <= 6; i++) {
+                    engine.eval(`(command "TEXT" '(8 ${210 - i*30}) 2 0 "${i}")`);
+                }
+
+                // Schriftfeld
+                const sx = 190, sy = 0;
+                engine.eval(`(command "LINE" '(${sx} ${sy}) '(297 ${sy}) "")`);
+                engine.eval(`(command "LINE" '(297 ${sy}) '(297 ${sy+50}) "")`);
+                engine.eval(`(command "LINE" '(297 ${sy+50}) '(${sx} ${sy+50}) "")`);
+                engine.eval(`(command "LINE" '(${sx} ${sy+50}) '(${sx} ${sy}) "")`);
+                engine.eval(`(command "LINE" '(${sx} ${sy+40}) '(297 ${sy+40}) "")`);
+                engine.eval(`(command "LINE" '(${sx} ${sy+30}) '(297 ${sy+30}) "")`);
+                engine.eval(`(command "LINE" '(${sx} ${sy+20}) '(297 ${sy+20}) "")`);
+                engine.eval(`(command "LINE" '(${sx} ${sy+10}) '(297 ${sy+10}) "")`);
+                engine.eval(`(command "LINE" '(${sx+55} ${sy+30}) '(${sx+55} ${sy}) "")`);
+                engine.eval(`(command "TEXT" '(${sx+2} ${sy+42}) 3.5 0 "Elektrotechnik Trahe GmbH")`);
+                engine.eval(`(command "TEXT" '(${sx+2} ${sy+32}) 2.5 0 "84579 Unterneukirchen")`);
+                engine.eval(`(command "TEXT" '(${sx+2} ${sy+22}) 5 0 "${spec.name}")`);
+                engine.eval(`(command "TEXT" '(${sx+57} ${sy+22}) 2.5 0 "${spec.template}")`);
+                engine.eval(`(command "TEXT" '(${sx+2} ${sy+12}) 2 0 "gez. HT")`);
+                engine.eval(`(command "TEXT" '(${sx+30} ${sy+12}) 2 0 "03.91")`);
+                engine.eval(`(command "TEXT" '(${sx+57} ${sy+12}) 2 0 "Blatt 1")`);
+                engine.eval(`(command "TEXT" '(${sx+2} ${sy+2}) 2 0 "gepr.")`);
+
+                return {
+                    svg: engine.get_entities_svg(),
+                    json: engine.get_entities_json(),
+                    entities: engine.entity_count()
+                };
+            }
+
+            function updateGallery() {
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+
+                drawings.forEach((d, i) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'thumb';
+                    thumb.innerHTML = `<h4>${d.spec.name}</h4><div class="meta">${d.spec.template}</div>${d.svg}`;
+                    thumb.onclick = () => selectDrawing(i);
+                    gallery.appendChild(thumb);
+                });
+            }
+
+            function selectDrawing(index) {
+                currentDrawing = index;
+                const d = drawings[index];
+
+                document.querySelectorAll('.thumb').forEach((t, i) => {
+                    t.classList.toggle('active', i === index);
+                });
+
+                document.getElementById('viewerTitle').textContent = `${d.spec.name} - ${d.spec.template}`;
+                document.getElementById('viewerContent').innerHTML = d.svg;
+                document.getElementById('stats').textContent =
+                    `${d.entities} entities | ${d.spec.components.length} components`;
+            }
+
+            document.getElementById('process').onclick = () => {
+                const csv = document.getElementById('csv').value;
+                const startTime = performance.now();
+
+                log.textContent = 'Verarbeite CSV...';
+                const specs = parseCSV(csv);
+                drawings = [];
+
+                document.getElementById('count').textContent = specs.length;
+
+                for (const spec of specs) {
+                    const result = generateDrawing(spec);
+                    drawings.push({ spec, ...result });
+                    appendLog(`${spec.name} (${spec.template}) - ${result.entities} entities`);
+                }
+
+                const elapsed = (performance.now() - startTime).toFixed(1);
+                appendLog(`\n${specs.length} Zeichnungen in ${elapsed}ms`);
+
+                updateGallery();
+                if (drawings.length > 0) selectDrawing(0);
+            };
+
+            // DXF generation is now in Rust (engine.get_entities_dxf())
+
+            function downloadFile(content, filename, type) {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            document.getElementById('exportSvg').onclick = () => {
+                if (currentDrawing === null) {
+                    appendLog('No drawing selected');
+                    return;
+                }
+                const d = drawings[currentDrawing];
+                // SVG is already generated, just download it
+                const svgContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + d.svg;
+                downloadFile(svgContent, `${d.spec.name}.svg`, 'image/svg+xml');
+                appendLog(`Exported ${d.spec.name}.svg (${svgContent.length} bytes)`);
+            };
+
+            document.getElementById('exportDxf').onclick = () => {
+                if (currentDrawing === null) {
+                    appendLog('No drawing selected');
+                    return;
+                }
+                const d = drawings[currentDrawing];
+                // Regenerate to get fresh drawing, then use Rust DXF export
+                generateDrawing(d.spec);
+                const dxf = engine.get_entities_dxf();  // DXF generation in Rust!
+                const count = engine.entity_count();
+                downloadFile(dxf, `${d.spec.name}.dxf`, 'application/dxf');
+                appendLog(`Exported ${d.spec.name}.dxf (${dxf.length} bytes, ${count} entities)`);
+            };
+
+            document.getElementById('exportAll').onclick = () => {
+                if (drawings.length === 0) {
+                    appendLog('No drawings to export');
+                    return;
+                }
+                appendLog(`\nExporting ${drawings.length} DXF files...`);
+                let count = 0;
+                for (const d of drawings) {
+                    generateDrawing(d.spec);
+                    const dxf = engine.get_entities_dxf();  // DXF from Rust
+                    downloadFile(dxf, `${d.spec.name}.dxf`, 'application/dxf');
+                    count++;
+                }
+                appendLog(`Exported ${count} DXF files`);
+            };
+
+            // Clear functionality (no button currently in HTML)
+            // If you add a clear button with id="clearDemo", uncomment this:
+            // document.getElementById('clearDemo').onclick = () => {
+            //     drawings = [];
+            //     currentDrawing = null;
+            //     document.getElementById('gallery').innerHTML = '';
+            //     document.getElementById('viewerContent').innerHTML = '<p class="small">Cleared</p>';
+            //     document.getElementById('count').textContent = '0';
+            //     log.textContent = 'Gelöscht.';
+            // };
+
+            // ============================================
+            // SLIDE 15: Interactive Playground
+            // Examples are now stored in Rust (lib.rs)
+            // ============================================
+
+            let playSvg = '';
+
+            // Verify playground elements exist
+            const playgroundElements = ['examples', 'lispCode', 'lispOutput', 'lispDrawing', 'playStats', 'runLisp', 'clearLisp'];
+            playgroundElements.forEach(id => {
+                if (!document.getElementById(id)) {
+                    console.error('Missing playground element:', id);
+                }
+            });
+            console.log('Playground initialized, engine ready:', !!engine);
+
+            document.getElementById('examples').onchange = (e) => {
+                try {
+                    if (e.target.value) {
+                        // Get example from Rust engine
+                        const code = engine.get_example(e.target.value);
+                        console.log('Loaded example:', e.target.value, code ? code.substring(0, 50) : 'null');
+                        if (code && !code.startsWith('; Unknown')) {
+                            document.getElementById('lispCode').value = code;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Example load error:', err);
+                }
+            };
+
+            document.getElementById('runLisp').onclick = () => {
+                try {
+                    const code = document.getElementById('lispCode').value;
+                    const startTime = performance.now();
+
+                    engine.clear();
+                    const result = engine.eval(code);
+                    playSvg = engine.get_entities_svg();
+                    const output = engine.get_output();
+                    const count = engine.entity_count();
+
+                    const elapsed = (performance.now() - startTime).toFixed(2);
+
+                    console.log('Run result:', { count, outputLen: output.length, svgLen: playSvg.length });
+                    console.log('SVG preview:', playSvg.substring(0, 200));
+
+                    document.getElementById('lispOutput').textContent = output || '(no output)';
+
+                    const drawingDiv = document.getElementById('lispDrawing');
+                    drawingDiv.innerHTML = playSvg;
+                    console.log('Drawing div innerHTML set, children:', drawingDiv.children.length);
+
+                    document.getElementById('playStats').textContent = `${count} entities | ${elapsed}ms`;
+                } catch (e) {
+                    console.error('Playground error:', e);
+                    document.getElementById('lispOutput').textContent = 'Error: ' + e.message;
+                }
+            };
+
+            document.getElementById('clearLisp').onclick = () => {
+                engine.clear();
+                document.getElementById('lispOutput').textContent = '';
+                document.getElementById('lispDrawing').innerHTML = '';
+                document.getElementById('playStats').textContent = '';
+                playSvg = '';
+            };
+
+            document.getElementById('exportPlaySvg').onclick = () => {
+                if (!playSvg) { appendLog('Nothing to export'); return; }
+                downloadFile('<?xml version="1.0" encoding="UTF-8"?>\n' + playSvg, 'drawing.svg', 'image/svg+xml');
+            };
+
+            document.getElementById('exportPlayDxf').onclick = () => {
+                if (engine.entity_count() === 0) { appendLog('Nothing to export'); return; }
+                const dxf = engine.get_entities_dxf();  // DXF from Rust
+                downloadFile(dxf, 'drawing.dxf', 'application/dxf');
+            };
+
+            // ============================================
+            // SLIDE 16: Function Plotter
+            // All logic in Rust WASM!
+            // ============================================
+
+            document.getElementById('plotExamples').onchange = (e) => {
+                if (e.target.value) {
+                    // Get example from Rust
+                    const code = engine.get_plot_example(e.target.value);
+                    if (code && !code.startsWith('; Unknown')) {
+                        document.getElementById('plotCode').value = code;
+                    }
+                }
+            };
+
+            document.getElementById('plotFunction').onclick = () => {
+                const code = document.getElementById('plotCode').value;
+                const xMin = parseFloat(document.getElementById('xMin').value) || -10;
+                const xMax = parseFloat(document.getElementById('xMax').value) || 10;
+                const yMin = parseFloat(document.getElementById('yMin').value) || -5;
+                const yMax = parseFloat(document.getElementById('yMax').value) || 5;
+                const output = document.getElementById('plotOutput');
+                const stats = document.getElementById('plotStats');
+                const plotArea = document.getElementById('plotArea');
+
+                try {
+                    // Call Rust to do all the work!
+                    const resultJson = engine.plot_function(code, xMin, xMax, yMin, yMax, 200);
+                    const result = JSON.parse(resultJson);
+
+                    if (result.error) {
+                        output.textContent = 'Error: ' + result.error;
+                        return;
+                    }
+
+                    // Display the SVG from Rust
+                    plotArea.innerHTML = result.svg;
+
+                    output.textContent = `Plotted ${result.points} points\nf(x) range: [${result.min_y.toFixed(3)}, ${result.max_y.toFixed(3)}]`;
+                    stats.textContent = `${result.points} points | x: [${xMin}, ${xMax}] | y: [${yMin}, ${yMax}]`;
+
+                } catch (e) {
+                    output.textContent = 'Error: ' + e.message;
+                    console.error('Plot error:', e);
+                }
+            };
+
+            document.getElementById('clearPlot').onclick = () => {
+                document.getElementById('plotArea').innerHTML = '';
+                document.getElementById('plotOutput').textContent = '';
+                document.getElementById('plotStats').textContent = '';
+            };
+        });
+    </script>
+</body>
+</html>
