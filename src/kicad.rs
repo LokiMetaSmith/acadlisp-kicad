@@ -52,7 +52,7 @@ pub fn to_kicad_sym(entities: &[DrawEntity], library_name: &str, symbol_name: &s
         }
     }
 
-    // Add default properties if missing (simplistic ID assignment, user should really provide them)
+    // Add default properties if missing
     let next_id = properties.len();
     if !has_ref {
         sexpr.push_str(&format!("    (property \"Reference\" \"U1\" (id {}) (at 0 5 0) (effects (font (size 1.27 1.27))))\n", next_id));
@@ -68,38 +68,28 @@ pub fn to_kicad_sym(entities: &[DrawEntity], library_name: &str, symbol_name: &s
     }
 
     // Symbol body (graphics and pins)
-    // We wrap graphics in a symbol unit "1_1" for simplicity, although generic symbols can have multiple units.
-    // For now, everything goes into unit 1, style 1.
     sexpr.push_str(&format!("    (symbol \"{}:1_1\"\n", symbol_name));
 
     // Graphics
     for entity in graphics {
         match entity {
             DrawEntity::Line { x1, y1, x2, y2, .. } => {
-                // (polyline (pts (xy X1 Y1) (xy X2 Y2)) (stroke (width 0) (type default) (color 0 0 0 0)) (fill (type none)))
                 sexpr.push_str(&format!(
                     "      (polyline (pts (xy {} {}) (xy {} {})) (stroke (width 0) (type default) (color 0 0 0 0)) (fill (type none)))\n",
                     x1, y1, x2, y2
                 ));
             }
             DrawEntity::Circle { cx, cy, radius, .. } => {
-                // (circle (center X Y) (radius R) (stroke (width 0) (type default) (color 0 0 0 0)) (fill (type none)))
                 sexpr.push_str(&format!(
                     "      (circle (center {} {}) (radius {}) (stroke (width 0) (type default) (color 0 0 0 0)) (fill (type none)))\n",
                     cx, cy, radius
                 ));
             }
             DrawEntity::Arc { cx, cy, radius, start_angle, end_angle, .. } => {
-                // KiCad arcs: (arc (start X Y) (mid X Y) (end X Y) ...)
-                // We have center, radius, start/end angles. Need to convert.
-                // Start point
                 let start_x = cx + radius * start_angle.cos();
                 let start_y = cy + radius * start_angle.sin();
-                // End point
                 let end_x = cx + radius * end_angle.cos();
                 let end_y = cy + radius * end_angle.sin();
-                // Mid point (approximate for now, taking average angle)
-                // Note: angles in acadlisp are radians? Yes, usually.
                 let mid_angle = (start_angle + end_angle) / 2.0;
                 let mid_x = cx + radius * mid_angle.cos();
                 let mid_y = cy + radius * mid_angle.sin();
@@ -110,29 +100,21 @@ pub fn to_kicad_sym(entities: &[DrawEntity], library_name: &str, symbol_name: &s
                 ));
             }
             DrawEntity::Text { x, y, height, text, .. } => {
-                // (text "TEXT" (at X Y R) (effects (font (size H H))))
                 sexpr.push_str(&format!(
                     "      (text \"{}\" (at {} {} 0) (effects (font (size {} {}))))\n",
                     escape_string(text), x, y, height, height
                 ));
             }
             DrawEntity::Insert { block_name: _, x: _, y: _, .. } => {
-                 // Blocks usually don't map directly unless exploded.
-                 // We'll just put a placeholder rectangle for now or ignore.
-                 // Ideally this would be recursive, but we don't have block definitions here easily.
-                 // Just ignored for now to avoid invalid output.
+                 // Ignored
             }
-             _ => {} // Ignore points and others
+             _ => {}
         }
     }
 
     // Pins
     for pin in pins {
         if let DrawEntity::Pin { name, number, etype, style, x, y, length, rotation, .. } = pin {
-            // (pin TYPE STYLE (at X Y ROT) (length LEN)
-            //   (name "NAME" (effects (font (size 1.27 1.27))))
-            //   (number "NUM" (effects (font (size 1.27 1.27))))
-            // )
             sexpr.push_str(&format!(
                 "      (pin {} {} (at {} {} {}) (length {}) \n",
                 etype, style, x, y, rotation, length
@@ -149,10 +131,120 @@ pub fn to_kicad_sym(entities: &[DrawEntity], library_name: &str, symbol_name: &s
         }
     }
 
-    sexpr.push_str("    )\n"); // End symbol unit
-    sexpr.push_str("  )\n"); // End symbol
-    sexpr.push_str(")\n"); // End lib
+    sexpr.push_str("    )\n");
+    sexpr.push_str("  )\n");
+    sexpr.push_str(")\n");
 
+    sexpr
+}
+
+/// Exports a list of DrawEntities to a KiCad Footprint (.kicad_mod) format
+pub fn to_kicad_mod(entities: &[DrawEntity], footprint_name: &str) -> String {
+    let mut sexpr = String::new();
+
+    // Header
+    sexpr.push_str(&format!("(footprint \"{}\" (layer \"F.Cu\")\n", footprint_name));
+    sexpr.push_str("  (tedit 0)\n"); // Timestamp edit 0
+
+    // Properties (Reference, Value) need to be handled if present, or defaults added.
+    // In footprint files, these are fp_text objects.
+    // Typically Reference is on F.SilkS and Value on F.Fab.
+
+    let mut has_ref = false;
+    let mut has_val = false;
+
+    // Process entities
+    for entity in entities {
+        match entity {
+            DrawEntity::Pad { name, ptype, shape, x, y, width, height, drill, rotation, layers } => {
+                // (pad "1" smd rect (at 0 0) (size 1.5 1.5) (layers "F.Cu" "F.Paste" "F.Mask"))
+                // layers string should be space separated quoted strings, but we store it as a single string?
+                // Let's assume the user passes "F.Cu" or "F.Cu F.Mask".
+                // We need to format it properly. If it's just a raw string like "F.Cu", we can quote it.
+                // If it's a list like "F.Cu,F.Mask", we should split and quote.
+
+                let layer_str = layers.split(',')
+                    .map(|s| format!("\"{}\"", s.trim()))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+
+                sexpr.push_str(&format!(
+                    "  (pad \"{}\" {} {} (at {} {} {}) (size {} {}) (drill {}) (layers {}))\n",
+                    name, ptype, shape, x, y, rotation, width, height, drill, layer_str
+                ));
+            }
+            DrawEntity::Line { x1, y1, x2, y2, layer } => {
+                // (fp_line (start x y) (end x y) (layer "Layer") (width 0.15))
+                sexpr.push_str(&format!(
+                    "  (fp_line (start {} {}) (end {} {}) (layer \"{}\") (stroke (width 0.15) (type solid)))\n",
+                    x1, y1, x2, y2, layer
+                ));
+            }
+            DrawEntity::Circle { cx, cy, radius, layer } => {
+                // (fp_circle (center x y) (end x y) (layer "Layer") ...)
+                // End point is center + radius
+                let end_x = cx + radius;
+                sexpr.push_str(&format!(
+                    "  (fp_circle (center {} {}) (end {} {}) (layer \"{}\") (stroke (width 0.15) (type solid)))\n",
+                    cx, cy, end_x, cy, layer
+                ));
+            }
+            DrawEntity::Arc { cx, cy, radius, start_angle, end_angle, layer } => {
+                // (fp_arc (start x y) (mid x y) (end x y) ...)
+                let start_x = cx + radius * start_angle.cos();
+                let start_y = cy + radius * start_angle.sin();
+                let end_x = cx + radius * end_angle.cos();
+                let end_y = cy + radius * end_angle.sin();
+                let mid_angle = (start_angle + end_angle) / 2.0;
+                let mid_x = cx + radius * mid_angle.cos();
+                let mid_y = cy + radius * mid_angle.sin();
+
+                sexpr.push_str(&format!(
+                    "  (fp_arc (start {} {}) (mid {} {}) (end {} {}) (layer \"{}\") (stroke (width 0.15) (type solid)))\n",
+                    start_x, start_y, mid_x, mid_y, end_x, end_y, layer
+                ));
+            }
+            DrawEntity::Text { x, y, height, text, layer } => {
+                // (fp_text user "Text" (at x y rot) (layer "Layer") (effects (font (size h h) (thickness t))))
+                // Check if it's special text
+                let type_str = if text.starts_with("REF") { "reference" } else if text.starts_with("VAL") { "value" } else { "user" };
+
+                if type_str == "reference" { has_ref = true; }
+                if type_str == "value" { has_val = true; }
+
+                sexpr.push_str(&format!(
+                    "  (fp_text {} \"{}\" (at {} {} 0) (layer \"{}\") (effects (font (size {} {}) (thickness 0.15))))\n",
+                    type_str, escape_string(text), x, y, layer, height, height
+                ));
+            }
+            DrawEntity::Property { key, value, x, y, rotation, height, visible, layer } => {
+                // Properties in footprints are often just text or specific fields.
+                // We'll map them to fp_text if possible, or ignore if they don't fit the model.
+                // Standard properties Reference/Value map to text.
+                let type_str = if key == "Reference" { "reference" } else if key == "Value" { "value" } else { "user" };
+
+                if type_str == "reference" { has_ref = true; }
+                if type_str == "value" { has_val = true; }
+
+                sexpr.push_str(&format!(
+                    "  (fp_text {} \"{}\" (at {} {} {}) (layer \"{}\") (effects (font (size {} {}) (thickness 0.15)) {}))\n",
+                    type_str, escape_string(value), x, y, rotation, layer, height, height,
+                    if *visible { "" } else { "hide" }
+                ));
+            }
+            _ => {}
+        }
+    }
+
+    // Add default Ref/Val if missing
+    if !has_ref {
+        sexpr.push_str(&format!("  (fp_text reference \"REF**\" (at 0 -0.5) (layer \"F.SilkS\") (effects (font (size 1 1) (thickness 0.15))))\n"));
+    }
+    if !has_val {
+        sexpr.push_str(&format!("  (fp_text value \"{}\" (at 0 1) (layer \"F.Fab\") (effects (font (size 1 1) (thickness 0.15))))\n", footprint_name));
+    }
+
+    sexpr.push_str(")\n");
     sexpr
 }
 

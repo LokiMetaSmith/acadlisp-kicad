@@ -512,6 +512,23 @@ fn entity_to_json(entity: &DrawEntity) -> String {
                 key, value, x, y, rotation, height, visible, layer
             )
         }
+        DrawEntity::Pad {
+            name,
+            ptype,
+            shape,
+            x,
+            y,
+            width,
+            height,
+            drill,
+            rotation,
+            layers,
+        } => {
+            format!(
+                r#"{{"type": "PAD", "name": "{}", "type": "{}", "shape": "{}", "x": {}, "y": {}, "width": {}, "height": {}, "drill": {}, "rotation": {}, "layers": "{}"}}"#,
+                name, ptype, shape, x, y, width, height, drill, rotation, layers
+            )
+        }
     }
 }
 

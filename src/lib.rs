@@ -109,6 +109,12 @@ impl WasmEngine {
         )
     }
 
+    /// Export current drawing as a KiCad Footprint
+    #[wasm_bindgen]
+    pub fn get_kicad_mod(&self, footprint_name: &str) -> String {
+        kicad::to_kicad_mod(&self.interpreter.drawing.entities, footprint_name)
+    }
+
     /// Clear the drawing
     #[wasm_bindgen]
     pub fn clear(&mut self) {
@@ -326,7 +332,7 @@ impl WasmEngine {
                         layer, block_name, x, y, scale, scale, rotation
                     ));
                 }
-                DrawEntity::Pin { .. } | DrawEntity::Property { .. } => {
+                DrawEntity::Pin { .. } | DrawEntity::Property { .. } | DrawEntity::Pad { .. } => {
                     // KiCad specific entities ignored in DXF export for now
                 }
             }
@@ -1028,6 +1034,23 @@ fn entity_to_json(entity: &DrawEntity) -> String {
                 key, value, x, y, rotation, height, visible, layer
             )
         }
+        DrawEntity::Pad {
+            name,
+            ptype,
+            shape,
+            x,
+            y,
+            width,
+            height,
+            drill,
+            rotation,
+            layers,
+        } => {
+            format!(
+                r#"{{"type":"PAD","name":"{}","ptype":"{}","shape":"{}","x":{},"y":{},"w":{},"h":{},"drill":{},"rot":{},"layers":"{}"}}"#,
+                name, ptype, shape, x, y, width, height, drill, rotation, layers
+            )
+        }
     }
 }
 
@@ -1079,6 +1102,16 @@ fn entities_to_svg(entities: &[DrawEntity]) -> String {
             }
             DrawEntity::Property { .. } => {
                 // Ignore properties for bounds
+            }
+            DrawEntity::Pad {
+                x, y, width, height, ..
+            } => {
+                let w2 = width / 2.0;
+                let h2 = height / 2.0;
+                min_x = min_x.min(*x - w2);
+                min_y = min_y.min(*y - h2);
+                max_x = max_x.max(*x + w2);
+                max_y = max_y.max(*y + h2);
             }
             DrawEntity::Arc { cx, cy, radius, .. } => {
                 min_x = min_x.min(cx - radius);
@@ -1199,6 +1232,38 @@ fn entities_to_svg(entities: &[DrawEntity]) -> String {
             }
             DrawEntity::Property { .. } => {
                 // Ignore properties in SVG for now
+            }
+            DrawEntity::Pad {
+                name,
+                shape,
+                x,
+                y,
+                width,
+                height,
+                ..
+            } => {
+                // Draw a simple shape for pad in SVG
+                if shape == "circle" || shape == "oval" {
+                    svg.push_str(&format!(
+                        "    <circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"#ffaa00\" fill-opacity=\"0.5\" />\n",
+                        x,
+                        -y,
+                        width.min(*height) / 2.0
+                    ));
+                } else {
+                    // Rect or others
+                    svg.push_str(&format!(
+                        "    <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#ffaa00\" fill-opacity=\"0.5\" transform=\"rotate(0)\" />\n",
+                        x - width / 2.0,
+                        -y - height / 2.0,
+                        width,
+                        height
+                    ));
+                }
+                svg.push_str(&format!(
+                    "    <text x=\"{}\" y=\"{}\" class=\"text\" font-size=\"{}\" text-anchor=\"middle\" transform=\"scale(1,-1) translate(0,{})\">{}</text>\n",
+                    x, -y, width.min(*height) * 0.4, -2.0 * y, name
+                ));
             }
             DrawEntity::Arc {
                 cx,
@@ -2182,7 +2247,7 @@ impl SchaltplanEngine {
                     dxf.push_str(&format!(" 42\n{}\n", scale)); // Y scale
                     dxf.push_str(&format!(" 50\n{}\n", rotation)); // Rotation
                 }
-                DrawEntity::Pin { .. } | DrawEntity::Property { .. } => {
+                DrawEntity::Pin { .. } | DrawEntity::Property { .. } | DrawEntity::Pad { .. } => {
                     // KiCad specific entities ignored in DXF export
                 }
             }
@@ -2225,8 +2290,8 @@ impl SchaltplanEngine {
             height,
             width.min(1200.0),
             height.min(900.0),
-            "AutoLISP Drawing",
-            "Generated",
+            self.config.company,
+            self.config.project,
             height
         );
 
@@ -2298,6 +2363,38 @@ impl SchaltplanEngine {
                 }
                 DrawEntity::Property { .. } => {
                     // Ignore properties in SVG for now
+                }
+                DrawEntity::Pad {
+                    name,
+                    shape,
+                    x,
+                    y,
+                    width,
+                    height,
+                    ..
+                } => {
+                    // Draw a simple shape for pad in SVG
+                    if shape == "circle" || shape == "oval" {
+                        svg.push_str(&format!(
+                            "    <circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"#ffaa00\" fill-opacity=\"0.5\" />\n",
+                            x,
+                            -y,
+                            width.min(*height) / 2.0
+                        ));
+                    } else {
+                        // Rect or others
+                        svg.push_str(&format!(
+                            "    <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#ffaa00\" fill-opacity=\"0.5\" transform=\"rotate(0)\" />\n",
+                            x - width / 2.0,
+                            -y - height / 2.0,
+                            width,
+                            height
+                        ));
+                    }
+                    svg.push_str(&format!(
+                        "    <text x=\"{}\" y=\"{}\" class=\"text\" font-size=\"{}\" text-anchor=\"middle\" transform=\"scale(1,-1) translate(0,{})\">{}</text>\n",
+                        x, -y, width.min(*height) * 0.4, -2.0 * y, name
+                    ));
                 }
                 DrawEntity::Arc {
                     cx,
@@ -2449,6 +2546,23 @@ impl SchaltplanEngine {
                     key, value, x, y, rotation, height, visible, layer
                 )
             }
+            DrawEntity::Pad {
+                name,
+                ptype,
+                shape,
+                x,
+                y,
+                width,
+                height,
+                drill,
+                rotation,
+                layers,
+            } => {
+                format!(
+                    r#"{{"type":"PAD","name":"{}","ptype":"{}","shape":"{}","x":{},"y":{},"w":{},"h":{},"drill":{},"rot":{},"layers":"{}"}}"#,
+                    name, ptype, shape, x, y, width, height, drill, rotation, layers
+                )
+            }
         }
     }
 
@@ -2499,6 +2613,16 @@ impl SchaltplanEngine {
                 }
                 DrawEntity::Property { .. } => {
                     // Ignore properties for bounds
+                }
+                DrawEntity::Pad {
+                    x, y, width, height, ..
+                } => {
+                    let w2 = width / 2.0;
+                    let h2 = height / 2.0;
+                    min_x = min_x.min(*x - w2);
+                    min_y = min_y.min(*y - h2);
+                    max_x = max_x.max(*x + w2);
+                    max_y = max_y.max(*y + h2);
                 }
                 DrawEntity::Arc { cx, cy, radius, .. } => {
                     min_x = min_x.min(cx - radius);

@@ -11,13 +11,13 @@ The goal is to extend `acadlisp` to serve as a parametric generator for KiCad ar
 - [x] **Implement `kicad-pin` Function:** Add a Lisp command to define symbol pins (number, name, electrical type, position).
 - [x] **Implement `kicad-property` Function:** Support adding metadata fields (Reference, Value, Footprint, Datasheet).
 - [x] **Create Symbol Exporter:** Implement a Rust module to traverse the `DrawEntity` list and serialize it into the `.kicad_sym` S-expression format.
-- [x] **Verify Symbol Geometry:** Ensure lines, circles, and arcs are correctly transformed and scaled for schematic grids. (Partially done via tests)
+- [x] **Verify Symbol Geometry:** Ensure lines, circles, and arcs are correctly transformed and scaled for schematic grids.
 
 ## 3. Footprint Export (`.kicad_mod`)
-- [ ] **Verify Feasibility:** Confirm `acadlisp`'s geometric engine can handle footprint-specific needs (layers like F.Cu, F.SilkS, accurate dimensions).
-- [ ] **Implement `kicad-pad` Function:** Add a Lisp command to define pads (SMD/Through-hole, size, shape, layer stack).
-- [ ] **Create Footprint Exporter:** Implement a Rust module to export entities to `.kicad_mod`.
-- [ ] **Layer Management:** Add support for mapping drawing layers (e.g., "0", "SILK") to KiCad technical layers.
+- [x] **Verify Feasibility:** Confirm `acadlisp`'s geometric engine can handle footprint-specific needs (layers like F.Cu, F.SilkS, accurate dimensions).
+- [x] **Implement `kicad-pad` Function:** Add a Lisp command to define pads (SMD/Through-hole, size, shape, layer stack).
+- [x] **Create Footprint Exporter:** Implement a Rust module to export entities to `.kicad_mod`.
+- [x] **Layer Management:** Add support for mapping drawing layers (e.g., "0", "SILK") to KiCad technical layers.
 
 ## 4. 3D Model Export (Future Scope)
 - [ ] **Explore 3D Capabilities:** Investigate if `acadlisp` needs extension to support Z-axis or 3D primitives, or if it can generate OpenSCAD/STEP scripts.

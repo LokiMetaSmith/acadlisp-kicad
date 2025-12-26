@@ -73,6 +73,18 @@ pub enum DrawEntity {
         visible: bool,
         layer: String,
     },
+    Pad {
+        name: String,
+        ptype: String, // smd, thru_hole, etc
+        shape: String, // rect, circle, oval, etc
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        drill: f64,
+        rotation: f64,
+        layers: String, // list of layers (e.g., "*.Cu" or "F.Cu,F.Paste")
+    },
 }
 
 // Simulated AutoCAD drawing state
@@ -363,6 +375,7 @@ impl Interpreter {
             // KiCad extensions
             "KICAD-PIN" => self.builtin_kicad_pin(&evaled_args),
             "KICAD-PROP" => self.builtin_kicad_prop(&evaled_args),
+            "KICAD-PAD" => self.builtin_kicad_pad(&evaled_args),
 
             // Selection sets (simulated)
             "SSGET" => Expr::Nil,
@@ -1601,8 +1614,8 @@ impl Interpreter {
                     "CIRCLE" => self.simulate_circle_command(&args[1..]),
                     "TEXT" => self.simulate_text_command(&args[1..]),
                     "INSERT" => self.simulate_insert_command(&args[1..]),
-                    "LAYER" => {}  // Layer management
-                    "-LAYER" => {} // Non-dialog layer
+                    "LAYER" => self.simulate_layer_command(&args[1..]),
+                    "-LAYER" => self.simulate_layer_command(&args[1..]),
                     "ZOOM" => {}   // View manipulation
                     "PAN" => {}
                     "SAVE" => {}
@@ -1723,6 +1736,31 @@ impl Interpreter {
                 rotation,
                 layer: self.drawing.current_layer.clone(),
             });
+        }
+    }
+
+    fn simulate_layer_command(&mut self, args: &[Expr]) {
+        // Basic simulation: (command "LAYER" "S" "LayerName" "")
+        // Args usually: "S" "LayerName" ""
+        let mut i = 0;
+        while i < args.len() {
+            if let Expr::String(opt) = &args[i] {
+                match opt.to_uppercase().as_str() {
+                    "S" | "SET" => {
+                        if i + 1 < args.len() {
+                            if let Expr::String(layer) = &args[i + 1] {
+                                self.drawing.current_layer = layer.clone();
+                                self.drawing
+                                    .system_variables
+                                    .insert("CLAYER".to_string(), Expr::String(layer.clone()));
+                            }
+                            i += 1;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            i += 1;
         }
     }
 
@@ -1922,6 +1960,51 @@ impl Interpreter {
         });
 
         Expr::String(key)
+    }
+
+    fn builtin_kicad_pad(&mut self, args: &[Expr]) -> Expr {
+        // (kicad-pad name type shape x y w h drill rot layers)
+        if args.len() < 10 {
+            return Expr::Nil;
+        }
+
+        let name = match &args[0] {
+            Expr::String(s) => s.clone(),
+            other => format!("{}", other),
+        };
+        let ptype = match &args[1] {
+            Expr::String(s) => s.clone(),
+            _ => "smd".to_string(),
+        };
+        let shape = match &args[2] {
+            Expr::String(s) => s.clone(),
+            _ => "rect".to_string(),
+        };
+        let x = args[3].as_real().unwrap_or(0.0);
+        let y = args[4].as_real().unwrap_or(0.0);
+        let width = args[5].as_real().unwrap_or(1.0);
+        let height = args[6].as_real().unwrap_or(1.0);
+        let drill = args[7].as_real().unwrap_or(0.0);
+        let rotation = args[8].as_real().unwrap_or(0.0);
+        let layers = match &args[9] {
+            Expr::String(s) => s.clone(),
+            _ => "F.Cu".to_string(),
+        };
+
+        self.drawing.entities.push(DrawEntity::Pad {
+            name: name.clone(),
+            ptype,
+            shape,
+            x,
+            y,
+            width,
+            height,
+            drill,
+            rotation,
+            layers,
+        });
+
+        Expr::String(name)
     }
 
     fn builtin_apply(&mut self, args: &[Expr]) -> Expr {

@@ -1,0 +1,451 @@
+        dxf.push_str("  0\nSECTION\n  2\nENTITIES\n");
+
+        for entity in entities {
+            match entity {
+                DrawEntity::Line {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    layer,
+                } => {
+                    dxf.push_str("  0\nLINE\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer)); // Layer
+                    dxf.push_str(&format!(" 10\n{}\n", x1)); // Start X
+                    dxf.push_str(&format!(" 20\n{}\n", y1)); // Start Y
+                    dxf.push_str(&format!(" 11\n{}\n", x2)); // End X
+                    dxf.push_str(&format!(" 21\n{}\n", y2)); // End Y
+                }
+                DrawEntity::Circle {
+                    cx,
+                    cy,
+                    radius,
+                    layer,
+                } => {
+                    dxf.push_str("  0\nCIRCLE\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer));
+                    dxf.push_str(&format!(" 10\n{}\n", cx)); // Center X
+                    dxf.push_str(&format!(" 20\n{}\n", cy)); // Center Y
+                    dxf.push_str(&format!(" 40\n{}\n", radius)); // Radius
+                }
+                DrawEntity::Arc {
+                    cx,
+                    cy,
+                    radius,
+                    start_angle,
+                    end_angle,
+                    layer,
+                } => {
+                    dxf.push_str("  0\nARC\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer));
+                    dxf.push_str(&format!(" 10\n{}\n", cx));
+                    dxf.push_str(&format!(" 20\n{}\n", cy));
+                    dxf.push_str(&format!(" 40\n{}\n", radius));
+                    dxf.push_str(&format!(" 50\n{}\n", start_angle.to_degrees()));
+                    dxf.push_str(&format!(" 51\n{}\n", end_angle.to_degrees()));
+                }
+                DrawEntity::Text {
+                    x,
+                    y,
+                    height,
+                    text,
+                    layer,
+                } => {
+                    dxf.push_str("  0\nTEXT\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer));
+                    dxf.push_str(&format!(" 10\n{}\n", x)); // Position X
+                    dxf.push_str(&format!(" 20\n{}\n", y)); // Position Y
+                    dxf.push_str(&format!(" 40\n{}\n", height)); // Text height
+                    dxf.push_str(&format!("  1\n{}\n", text)); // Text string
+                }
+                DrawEntity::Point { x, y, layer } => {
+                    dxf.push_str("  0\nPOINT\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer));
+                    dxf.push_str(&format!(" 10\n{}\n", x));
+                    dxf.push_str(&format!(" 20\n{}\n", y));
+                }
+                DrawEntity::Insert {
+                    block_name,
+                    x,
+                    y,
+                    scale,
+                    rotation,
+                    layer,
+                } => {
+                    dxf.push_str("  0\nINSERT\n");
+                    dxf.push_str(&format!("  8\n{}\n", layer));
+                    dxf.push_str(&format!("  2\n{}\n", block_name)); // Block name
+                    dxf.push_str(&format!(" 10\n{}\n", x));
+                    dxf.push_str(&format!(" 20\n{}\n", y));
+                    dxf.push_str(&format!(" 41\n{}\n", scale)); // X scale
+                    dxf.push_str(&format!(" 42\n{}\n", scale)); // Y scale
+                    dxf.push_str(&format!(" 50\n{}\n", rotation)); // Rotation
+                }
+                DrawEntity::Pin { .. } | DrawEntity::Property { .. } => {
+                    // KiCad specific entities ignored in DXF export
+                }
+            }
+        }
+
+        dxf.push_str("  0\nENDSEC\n");
+        dxf.push_str("  0\nEOF\n");
+
+        dxf
+    }
+
+    fn entities_to_svg(&self, entities: &[DrawEntity]) -> String {
+        // Calculate bounding box
+        let (min_x, min_y, max_x, max_y) = self.calculate_bounds(entities);
+
+        let padding = 50.0;
+        let width = (max_x - min_x + 2.0 * padding).max(800.0);
+        let height = (max_y - min_y + 2.0 * padding).max(600.0);
+
+        let mut svg = format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="{} {} {} {}"
+     width="{}" height="{}"
+     style="background-color: #1a1a2e;">
+  <title>{} - {}</title>
+  <defs>
+    <style>
+      .line {{ stroke: #00ff88; stroke-width: 1; fill: none; }}
+      .circle {{ stroke: #00aaff; stroke-width: 1; fill: none; }}
+      .text {{ fill: #ffffff; font-family: monospace; }}
+      .block {{ stroke: #ff8800; fill: none; }}
+    </style>
+  </defs>
+  <g transform="translate(0, {}) scale(1, -1)">
+"#,
+            min_x - padding,
+            min_y - padding,
+            width,
+            height,
+            width.min(1200.0),
+            height.min(900.0),
+            "AutoLISP Drawing",
+            "Generated",
+            height
+        );
+
+        for entity in entities {
+            match entity {
+                DrawEntity::Line { x1, y1, x2, y2, .. } => {
+                    svg.push_str(&format!(
+                        "    <line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" class=\"line\" />\n",
+                        x1, y1, x2, y2
+                    ));
+                }
+                DrawEntity::Circle { cx, cy, radius, .. } => {
+                    svg.push_str(&format!(
+                        "    <circle cx=\"{}\" cy=\"{}\" r=\"{}\" class=\"circle\" />\n",
+                        cx, cy, radius
+                    ));
+                }
+                DrawEntity::Text {
+                    x, y, height, text, ..
+                } => {
+                    let escaped = text
+                        .replace('&', "&amp;")
+                        .replace('<', "&lt;")
+                        .replace('>', "&gt;");
+                    // Note: text needs to be flipped back since we're in a flipped coordinate system
+                    svg.push_str(&format!(
+                        "    <text x=\"{}\" y=\"{}\" class=\"text\" font-size=\"{}\" transform=\"scale(1,-1) translate(0,{})\">{}</text>\n",
+                        x, -y, height * 1.5, -2.0 * y, escaped
+                    ));
+                }
+                DrawEntity::Insert {
+                    block_name, x, y, ..
+                } => {
+                    svg.push_str(&format!(
+                        "    <rect x=\"{}\" y=\"{}\" width=\"40\" height=\"40\" class=\"block\" />\n",
+                        x, y
+                    ));
+                    svg.push_str(&format!(
+                        "    <text x=\"{}\" y=\"{}\" class=\"text\" font-size=\"8\" transform=\"scale(1,-1) translate(0,{})\">{}</text>\n",
+                        x + 2.0, -(y + 20.0), -2.0 * (y + 20.0), block_name
+                    ));
+                }
+                DrawEntity::Pin {
+                    name,
+                    number,
+                    x,
+                    y,
+                    length,
+                    rotation,
+                    ..
+                } => {
+                    // Draw a simple line and circle for pin in SVG
+                    let rad = rotation.to_radians();
+                    let end_x = x + length * rad.cos();
+                    let end_y = y + length * rad.sin();
+                    svg.push_str(&format!(
+                        "    <line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#ff00ff\" stroke-width=\"0.5\" />\n",
+                        x, -y, end_x, -end_y
+                    ));
+                    svg.push_str(&format!(
+                        "    <circle cx=\"{}\" cy=\"{}\" r=\"0.5\" stroke=\"#ff00ff\" fill=\"none\" />\n",
+                        x, -y
+                    ));
+                    // Text
+                    svg.push_str(&format!(
+                        "    <text x=\"{}\" y=\"{}\" class=\"text\" font-size=\"2\" transform=\"scale(1,-1) translate(0,{})\">{} {}</text>\n",
+                        end_x, -(end_y + 2.0), -2.0 * (end_y + 2.0), name, number
+                    ));
+                }
+                DrawEntity::Property { .. } => {
+                    // Ignore properties in SVG for now
+                }
+                DrawEntity::Arc {
+                    cx,
+                    cy,
+                    radius,
+                    start_angle,
+                    end_angle,
+                    ..
+                } => {
+                    let start_x = cx + radius * start_angle.cos();
+                    let start_y = cy + radius * start_angle.sin();
+                    let end_x = cx + radius * end_angle.cos();
+                    let end_y = cy + radius * end_angle.sin();
+                    let large_arc = if (end_angle - start_angle).abs() > std::f64::consts::PI {
+                        1
+                    } else {
+                        0
+                    };
+                    svg.push_str(&format!(
+                        "    <path d=\"M {} {} A {} {} 0 {} 1 {} {}\" class=\"circle\" />\n",
+                        start_x, start_y, radius, radius, large_arc, end_x, end_y
+                    ));
+                }
+                DrawEntity::Point { x, y, .. } => {
+                    svg.push_str(&format!(
+                        "    <circle cx=\"{}\" cy=\"{}\" r=\"2\" fill=\"#00ff88\" />\n",
+                        x, y
+                    ));
+                }
+            }
+        }
+
+        svg.push_str("  </g>\n</svg>\n");
+        svg
+    }
+
+    fn entities_to_json(&self, entities: &[DrawEntity]) -> String {
+        let mut json = String::from("[\n");
+        for (i, entity) in entities.iter().enumerate() {
+            if i > 0 {
+                json.push_str(",\n");
+            }
+            json.push_str("  ");
+            json.push_str(&self.entity_to_json(entity));
+        }
+        json.push_str("\n]\n");
+        json
+    }
+
+    fn entity_to_json(&self, entity: &DrawEntity) -> String {
+        match entity {
+            DrawEntity::Line {
+                x1,
+                y1,
+                x2,
+                y2,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"LINE","x1":{},"y1":{},"x2":{},"y2":{},"layer":"{}"}}"#,
+                    x1, y1, x2, y2, layer
+                )
+            }
+            DrawEntity::Circle {
+                cx,
+                cy,
+                radius,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"CIRCLE","cx":{},"cy":{},"r":{},"layer":"{}"}}"#,
+                    cx, cy, radius, layer
+                )
+            }
+            DrawEntity::Arc {
+                cx,
+                cy,
+                radius,
+                start_angle,
+                end_angle,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"ARC","cx":{},"cy":{},"r":{},"start":{},"end":{},"layer":"{}"}}"#,
+                    cx, cy, radius, start_angle, end_angle, layer
+                )
+            }
+            DrawEntity::Text {
+                x,
+                y,
+                height,
+                text,
+                layer,
+            } => {
+                // Escape backslashes first, then quotes for valid JSON
+                let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
+                format!(
+                    r#"{{"type":"TEXT","x":{},"y":{},"h":{},"text":"{}","layer":"{}"}}"#,
+                    x, y, height, escaped, layer
+                )
+            }
+            DrawEntity::Point { x, y, layer } => {
+                format!(
+                    r#"{{"type":"POINT","x":{},"y":{},"layer":"{}"}}"#,
+                    x, y, layer
+                )
+            }
+            DrawEntity::Insert {
+                block_name,
+                x,
+                y,
+                scale,
+                rotation,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"INSERT","block":"{}","x":{},"y":{},"scale":{},"rot":{},"layer":"{}"}}"#,
+                    block_name, x, y, scale, rotation, layer
+                )
+            }
+            DrawEntity::Pin {
+                name,
+                number,
+                etype,
+                style,
+                x,
+                y,
+                length,
+                rotation,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"PIN","name":"{}","num":"{}","etype":"{}","style":"{}","x":{},"y":{},"len":{},"rot":{},"layer":"{}"}}"#,
+                    name, number, etype, style, x, y, length, rotation, layer
+                )
+            }
+            DrawEntity::Property {
+                key,
+                value,
+                x,
+                y,
+                rotation,
+                height,
+                visible,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"PROP","key":"{}","val":"{}","x":{},"y":{},"rot":{},"h":{},"vis":{},"layer":"{}"}}"#,
+                    key, value, x, y, rotation, height, visible, layer
+                )
+            }
+            DrawEntity::Pad {
+                name,
+                ptype,
+                shape,
+                x,
+                y,
+                width,
+                height,
+                drill,
+                rotation,
+                layers,
+            } => {
+                format!(
+                    r#"{{"type":"PAD","name":"{}","ptype":"{}","shape":"{}","x":{},"y":{},"w":{},"h":{},"drill":{},"rot":{},"layers":"{}"}}"#,
+                    name, ptype, shape, x, y, width, height, drill, rotation, layers
+                )
+            }
+            DrawEntity::Pin {
+                name,
+                number,
+                etype,
+                style,
+                x,
+                y,
+                length,
+                rotation,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"PIN","name":"{}","num":"{}","etype":"{}","style":"{}","x":{},"y":{},"len":{},"rot":{},"layer":"{}"}}"#,
+                    name, number, etype, style, x, y, length, rotation, layer
+                )
+            }
+            DrawEntity::Property {
+                key,
+                value,
+                x,
+                y,
+                rotation,
+                height,
+                visible,
+                layer,
+            } => {
+                format!(
+                    r#"{{"type":"PROP","key":"{}","val":"{}","x":{},"y":{},"rot":{},"h":{},"vis":{},"layer":"{}"}}"#,
+                    key, value, x, y, rotation, height, visible, layer
+                )
+            }
+            DrawEntity::Pad {
+                name,
+                ptype,
+                shape,
+                x,
+                y,
+                width,
+                height,
+                drill,
+                rotation,
+                layers,
+            } => {
+                format!(
+                    r#"{{"type":"PAD","name":"{}","ptype":"{}","shape":"{}","x":{},"y":{},"w":{},"h":{},"drill":{},"rot":{},"layers":"{}"}}"#,
+                    name, ptype, shape, x, y, width, height, drill, rotation, layers
+                )
+            }
+        }
+    }
+
+    fn calculate_bounds(&self, entities: &[DrawEntity]) -> (f64, f64, f64, f64) {
+        let mut min_x = f64::MAX;
+        let mut min_y = f64::MAX;
+        let mut max_x = f64::MIN;
+        let mut max_y = f64::MIN;
+
+        if entities.is_empty() {
+            return (0.0, 0.0, 800.0, 600.0);
+        }
+
+        for entity in entities {
+            match entity {
+                DrawEntity::Line { x1, y1, x2, y2, .. } => {
+                    min_x = min_x.min(*x1).min(*x2);
+                    min_y = min_y.min(*y1).min(*y2);
+                    max_x = max_x.max(*x1).max(*x2);
+                    max_y = max_y.max(*y1).max(*y2);
+                }
+                DrawEntity::Circle { cx, cy, radius, .. } => {
+                    min_x = min_x.min(cx - radius);
+                    min_y = min_y.min(cy - radius);
+                    max_x = max_x.max(cx + radius);
+                    max_y = max_y.max(cy + radius);
+                }
+                DrawEntity::Text {
+                    x, y, height, text, ..
+                } => {
+                    min_x = min_x.min(*x);
+                    min_y = min_y.min(*y);
+                    max_x = max_x.max(*x + text.len() as f64 * height * 0.6);
+                    max_y = max_y.max(*y + height);
+                }
+                DrawEntity::Insert { x, y, .. } => {
